@@ -1,55 +1,22 @@
 import { useState } from "react";
 import { usePreferences } from "../store/usePreferences";
+import { S, colors } from "../styles";
 
 const PRESET_CUISINES = ["Italian", "Mexican", "Chinese", "Japanese", "Indian", "Mediterranean", "American", "Thai", "French", "Korean"];
 const PRESET_RESTRICTIONS = ["Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Keto", "Paleo", "Halal", "Kosher", "Low-Sodium", "Low-Sugar"];
 
 const Tag = ({ label, onRemove }) => (
-  <span style={{
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "0.3rem",
-    background: "#e8f5e9",
-    color: "#2d6a4f",
-    borderRadius: "20px",
-    padding: "0.25rem 0.75rem",
-    fontSize: "0.85rem",
-    fontWeight: "500",
-  }}>
+  <span style={{ ...S.tag, display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
     {label}
-    <span
-      onClick={onRemove}
-      style={{ cursor: "pointer", fontWeight: "bold", color: "#999" }}
-    >
-      ✕
-    </span>
+    <span onClick={onRemove} style={{ cursor: "pointer", color: colors.textMuted, fontWeight: "bold", lineHeight: 1 }}>✕</span>
   </span>
 );
 
 const CheckboxGroup = ({ options, selected, onToggle }) => (
   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.75rem" }}>
     {options.map((opt) => (
-      <label
-        key={opt}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "0.3rem",
-          padding: "0.3rem 0.75rem",
-          borderRadius: "20px",
-          border: `1px solid ${selected.includes(opt) ? "#2d6a4f" : "#ccc"}`,
-          background: selected.includes(opt) ? "#e8f5e9" : "white",
-          cursor: "pointer",
-          fontSize: "0.85rem",
-          userSelect: "none",
-        }}
-      >
-        <input
-          type="checkbox"
-          checked={selected.includes(opt)}
-          onChange={() => onToggle(opt)}
-          style={{ display: "none" }}
-        />
+      <label key={opt} style={{ display: "flex", alignItems: "center", gap: "0.3rem", padding: "0.3rem 0.85rem", borderRadius: "999px", border: `1px solid ${selected.includes(opt) ? colors.primary : colors.primaryXLight}`, background: selected.includes(opt) ? colors.bgTag : colors.bgCard, cursor: "pointer", fontSize: "0.85rem", userSelect: "none", color: selected.includes(opt) ? colors.primaryDark : colors.textSecondary, fontWeight: selected.includes(opt) ? "600" : "400", transition: "all 0.15s" }}>
+        <input type="checkbox" checked={selected.includes(opt)} onChange={() => onToggle(opt)} style={{ display: "none" }} />
         {opt}
       </label>
     ))}
@@ -58,119 +25,59 @@ const CheckboxGroup = ({ options, selected, onToggle }) => (
 
 const CustomInput = ({ placeholder, onAdd }) => {
   const [value, setValue] = useState("");
-
-  const handleAdd = () => {
-    if (!value.trim()) return;
-    onAdd(value.trim());
-    setValue("");
-  };
-
+  const handleAdd = () => { if (!value.trim()) return; onAdd(value.trim()); setValue(""); };
   return (
     <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
-      <input
-        type="text"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-        style={{ flex: 1, padding: "0.4rem 0.75rem", borderRadius: "6px", border: "1px solid #ccc" }}
-      />
-      <button
-        onClick={handleAdd}
-        style={{
-          padding: "0.4rem 0.75rem",
-          borderRadius: "6px",
-          background: "#2d6a4f",
-          color: "white",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        Add
-      </button>
+      <input type="text" placeholder={placeholder} value={value} onChange={(e) => setValue(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAdd()} style={{ ...S.input, flex: 1 }} />
+      <button onClick={handleAdd} style={S.btnPrimary}>Add</button>
     </div>
   );
 };
+
+const SectionCard = ({ title, children }) => (
+  <div style={{ ...S.card, padding: "1.25rem 1.5rem", marginBottom: "1.25rem" }}>
+    <h3 style={{ color: colors.textPrimary, marginBottom: "1rem", marginTop: 0, fontSize: "1.05rem" }}>{title}</h3>
+    {children}
+  </div>
+);
 
 const Preferences = () => {
   const { preferences, updatePreferences, toggleItem, addCustomItem, removeItem } = usePreferences();
   const [saved, setSaved] = useState(false);
 
-  const handleGoalChange = (field, value) => {
-    updatePreferences({ [field]: value });
-  };
-
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
+  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
 
   return (
-    <div style={{ padding: "1.5rem", maxWidth: "700px", margin: "0 auto" }}>
-      <h2>My Preferences</h2>
-      <p style={{ color: "#666", marginBottom: "1.5rem" }}>
+    <div style={S.page}>
+      <h2 style={{ color: colors.textPrimary, marginBottom: "0.25rem" }}>My Preferences</h2>
+      <p style={{ color: colors.textMuted, marginBottom: "1.5rem", fontSize: "0.9rem" }}>
         Tell us about your taste and dietary needs so we can suggest the best meals for you.
       </p>
 
-      {/* Cuisines */}
-      <section style={{ marginBottom: "2rem" }}>
-        <h3 style={{ marginBottom: "0.5rem" }}>Favorite Cuisines</h3>
-        <CheckboxGroup
-          options={PRESET_CUISINES}
-          selected={preferences.cuisines}
-          onToggle={(val) => toggleItem("cuisines", val)}
-        />
-        <CustomInput
-          placeholder="Add a custom cuisine..."
-          onAdd={(val) => addCustomItem("cuisines", val)}
-        />
+      <SectionCard title="🍝 Favorite Cuisines">
+        <CheckboxGroup options={PRESET_CUISINES} selected={preferences.cuisines} onToggle={(v) => toggleItem("cuisines", v)} />
+        <CustomInput placeholder="Add a custom cuisine..." onAdd={(v) => addCustomItem("cuisines", v)} />
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-          {preferences.cuisines
-            .filter((c) => !PRESET_CUISINES.includes(c))
-            .map((c) => (
-              <Tag key={c} label={c} onRemove={() => removeItem("cuisines", c)} />
-            ))}
+          {preferences.cuisines.filter((c) => !PRESET_CUISINES.includes(c)).map((c) => <Tag key={c} label={c} onRemove={() => removeItem("cuisines", c)} />)}
         </div>
-      </section>
+      </SectionCard>
 
-      {/* Dietary Restrictions */}
-      <section style={{ marginBottom: "2rem" }}>
-        <h3 style={{ marginBottom: "0.5rem" }}>Dietary Restrictions</h3>
-        <CheckboxGroup
-          options={PRESET_RESTRICTIONS}
-          selected={preferences.restrictions}
-          onToggle={(val) => toggleItem("restrictions", val)}
-        />
-        <CustomInput
-          placeholder="Add a custom restriction..."
-          onAdd={(val) => addCustomItem("restrictions", val)}
-        />
+      <SectionCard title="🥗 Dietary Restrictions">
+        <CheckboxGroup options={PRESET_RESTRICTIONS} selected={preferences.restrictions} onToggle={(v) => toggleItem("restrictions", v)} />
+        <CustomInput placeholder="Add a custom restriction..." onAdd={(v) => addCustomItem("restrictions", v)} />
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-          {preferences.restrictions
-            .filter((r) => !PRESET_RESTRICTIONS.includes(r))
-            .map((r) => (
-              <Tag key={r} label={r} onRemove={() => removeItem("restrictions", r)} />
-            ))}
+          {preferences.restrictions.filter((r) => !PRESET_RESTRICTIONS.includes(r)).map((r) => <Tag key={r} label={r} onRemove={() => removeItem("restrictions", r)} />)}
         </div>
-      </section>
+      </SectionCard>
 
-      {/* Allergies */}
-      <section style={{ marginBottom: "2rem" }}>
-        <h3 style={{ marginBottom: "0.5rem" }}>Allergies</h3>
-        <CustomInput
-          placeholder="e.g. Peanuts, Shellfish, Eggs..."
-          onAdd={(val) => addCustomItem("allergies", val)}
-        />
+      <SectionCard title="⚠️ Allergies">
+        <CustomInput placeholder="e.g. Peanuts, Shellfish, Eggs..." onAdd={(v) => addCustomItem("allergies", v)} />
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-          {preferences.allergies.map((a) => (
-            <Tag key={a} label={a} onRemove={() => removeItem("allergies", a)} />
-          ))}
+          {preferences.allergies.map((a) => <Tag key={a} label={a} onRemove={() => removeItem("allergies", a)} />)}
         </div>
-      </section>
+      </SectionCard>
 
-      {/* Nutritional Goals */}
-      <section style={{ marginBottom: "2rem" }}>
-        <h3 style={{ marginBottom: "0.75rem" }}>Daily Nutritional Goals</h3>
+      <SectionCard title="🎯 Daily Nutritional Goals">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
           {[
             { label: "Calories (kcal)", field: "calorieGoal", placeholder: "e.g. 2000" },
@@ -179,38 +86,15 @@ const Preferences = () => {
             { label: "Fat (g)", field: "fatGoal", placeholder: "e.g. 65" },
           ].map(({ label, field, placeholder }) => (
             <div key={field}>
-              <label style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem", color: "#555" }}>
-                {label}
-              </label>
-              <input
-                type="number"
-                placeholder={placeholder}
-                value={preferences[field]}
-                onChange={(e) => handleGoalChange(field, e.target.value)}
-                min="0"
-                style={{ width: "100%", padding: "0.5rem", borderRadius: "6px", border: "1px solid #ccc", boxSizing: "border-box" }}
-              />
+              <label style={{ display: "block", fontSize: "0.82rem", marginBottom: "0.3rem", color: colors.textSecondary, fontWeight: "500" }}>{label}</label>
+              <input type="number" placeholder={placeholder} value={preferences[field]} onChange={(e) => updatePreferences({ [field]: e.target.value })} min="0" style={{ ...S.input, width: "100%", boxSizing: "border-box" }} />
             </div>
           ))}
         </div>
-      </section>
+      </SectionCard>
 
-      {/* Save Button */}
-      <button
-        onClick={handleSave}
-        style={{
-          padding: "0.6rem 1.5rem",
-          borderRadius: "6px",
-          background: saved ? "#52b788" : "#2d6a4f",
-          color: "white",
-          border: "none",
-          cursor: "pointer",
-          fontWeight: "bold",
-          fontSize: "1rem",
-          transition: "background 0.3s",
-        }}
-      >
-        {saved ? "✓ Saved!" : "Save Preferences"}
+      <button onClick={handleSave} style={saved ? { ...S.btnPrimaryLarge, background: colors.primaryLight, cursor: "default" } : S.btnPrimaryLarge}>
+        {saved ? "✓ Preferences Saved!" : "Save Preferences"}
       </button>
     </div>
   );

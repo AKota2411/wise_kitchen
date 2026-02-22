@@ -5,54 +5,28 @@ import Preferences from "./pages/Preferences";
 import Meals from "./pages/Meals";
 import SavedRecipes from "./pages/SavedRecipes";
 import { usePantry } from "./store/usePantry";
-
-const navStyle = ({ isActive }) => ({
-  textDecoration: "none",
-  padding: "0.5rem 1rem",
-  borderRadius: "6px",
-  fontWeight: "500",
-  background: isActive ? "#2d6a4f" : "transparent",
-  color: isActive ? "white" : "#2d6a4f",
-  border: "1px solid #2d6a4f",
-  fontSize: "0.9rem",
-});
+import { S, colors } from "./styles";
 
 const App = () => {
   const pantryState = usePantry();
 
   return (
     <BrowserRouter>
-      <div style={{ fontFamily: "sans-serif" }}>
-        <nav style={{
-          display: "flex",
-          gap: "0.75rem",
-          padding: "1rem 1.5rem",
-          borderBottom: "1px solid #eee",
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}>
-          <span style={{ fontWeight: "bold", fontSize: "1.1rem", marginRight: "1rem", color: "#2d6a4f" }}>
-            🌿 Wise Kitchen
-          </span>
-          <NavLink to="/" style={navStyle}>Pantry</NavLink>
-          <NavLink to="/grocery" style={navStyle}>Grocery List</NavLink>
-          <NavLink to="/meals" style={navStyle}>Meals</NavLink>
-          <NavLink to="/saved" style={navStyle}>Saved Recipes</NavLink>
-          <NavLink to="/preferences" style={navStyle}>Preferences</NavLink>
+      <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", background: colors.bgPage, minHeight: "100vh" }}>
+        <nav style={S.nav}>
+          <span style={S.navBrand}>🌿 Wise Kitchen</span>
+          <NavLink to="/" style={({ isActive }) => isActive ? S.navLinkActive : S.navLink}>Pantry</NavLink>
+          <NavLink to="/grocery" style={({ isActive }) => isActive ? S.navLinkActive : S.navLink}>Grocery List</NavLink>
+          <NavLink to="/meals" style={({ isActive }) => isActive ? S.navLinkActive : S.navLink}>Meals</NavLink>
+          <NavLink to="/saved" style={({ isActive }) => isActive ? S.navLinkActive : S.navLink}>Saved Recipes</NavLink>
+          <NavLink to="/preferences" style={({ isActive }) => isActive ? S.navLinkActive : S.navLink}>Preferences</NavLink>
         </nav>
 
         <Routes>
           <Route path="/" element={<Pantry {...pantryState} />} />
           <Route path="/grocery" element={<GroceryList {...pantryState} />} />
           <Route path="/meals" element={<Meals pantry={pantryState.pantry} updateQuantity={pantryState.updateQuantity} toggleLow={pantryState.toggleLow} addToGroceryList={pantryState.addToGroceryList} />} />
-          <Route path="/saved" element={
-            <SavedRecipes
-              pantry={pantryState.pantry}
-              updateQuantity={pantryState.updateQuantity}
-              toggleLow={pantryState.toggleLow}
-              addToGroceryList={pantryState.addToGroceryList}
-            />
-          } />
+          <Route path="/saved" element={<SavedRecipes pantry={pantryState.pantry} updateQuantity={pantryState.updateQuantity} toggleLow={pantryState.toggleLow} addToGroceryList={pantryState.addToGroceryList} />} />
           <Route path="/preferences" element={<Preferences />} />
         </Routes>
       </div>
