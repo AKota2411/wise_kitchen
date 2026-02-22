@@ -41,8 +41,8 @@ const SectionCard = ({ title, children }) => (
   </div>
 );
 
-const Preferences = () => {
-  const { preferences, updatePreferences, toggleItem, addCustomItem, removeItem } = usePreferences();
+const Preferences = ({ uid }) => {
+  const { preferences, updatePreferences, toggleItem, addCustomItem, removeItem } = usePreferences(uid);
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };

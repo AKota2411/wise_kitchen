@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { getSavedRecipes, deleteRecipe, updateRecipeNotes } from "../utils/storage";
 import { S, colors } from "../styles";
 
-const SavedRecipes = ({ pantry, updateQuantity, toggleLow, addToGroceryList }) => {
+const SavedRecipes = ({ uid, pantry, updateQuantity, toggleLow, addToGroceryList }) => {
   const [recipes, setRecipes] = useState([]);
   const [expanded, setExpanded] = useState(null);
   const [editingNotes, setEditingNotes] = useState({});
@@ -11,10 +11,10 @@ const SavedRecipes = ({ pantry, updateQuantity, toggleLow, addToGroceryList }) =
   const [madeItConfirmed, setMadeItConfirmed] = useState({});
   const [showGroceryPopup, setShowGroceryPopup] = useState(null);
 
-  useEffect(() => { setRecipes(getSavedRecipes()); }, []);
+  useEffect(() => { setRecipes(getSavedRecipes(uid)); }, [uid]);
 
-  const handleDelete = (name) => { deleteRecipe(name); setRecipes(getSavedRecipes()); if (expanded === name) setExpanded(null); };
-  const handleSaveNotes = (name) => { updateRecipeNotes(name, editingNotes[name]); setRecipes(getSavedRecipes()); };
+  const handleDelete = (name) => { deleteRecipe(uid, name); setRecipes(getSavedRecipes(uid)); if (expanded === name) setExpanded(null); };
+  const handleSaveNotes = (name) => { updateRecipeNotes(uid, name, editingNotes[name]); setRecipes(getSavedRecipes(uid)); };
 
   const toggleExpand = (name) => {
     if (expanded === name) { setExpanded(null); return; }

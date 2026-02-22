@@ -1,8 +1,6 @@
 const USDA_API_KEY = import.meta.env.VITE_USDA_API_KEY;
 const BASE_URL = "https://api.nal.usda.gov/fdc/v1";
 
-// USDA nutrient IDs - these are fixed and reliable
-// 1008 = Energy (kcal), 1003 = Protein, 1005 = Carbohydrate by difference, 1004 = Total lipid (fat)
 const NUTRIENT_IDS = {
   calories: 1008,
   protein: 1003,
@@ -11,41 +9,50 @@ const NUTRIENT_IDS = {
 };
 
 export const fetchIngredientNutrition = async (ingredientName) => {
-  if (!USDA_API_KEY) return null;
+  console.log("[foodFacts] fetching for:", ingredientName);
+  console.log("[foodFacts] API key present:", !!USDA_API_KEY);
+
+  if (!USDA_API_KEY) {
+    console.warn("[foodFacts] No USDA API key found — skipping nutrition lookup");
+    return null;
+  }
 
   try {
-    // Append "raw" to bias toward uncooked ingredient data
     const query = `${ingredientName} raw`;
+    const url = `${BASE_URL}/foods/search?query=${encodeURIComponent(query)}&dataType=Foundation,SR%20Legacy&pageSize=5&api_key=${USDA_API_KEY}`;
+    console.log("[foodFacts] requesting:", url.replace(USDA_API_KEY, "KEY_HIDDEN"));
 
-    const response = await fetch(
-      `${BASE_URL}/foods/search?query=${encodeURIComponent(query)}&dataType=Foundation,SR%20Legacy&pageSize=5&api_key=${USDA_API_KEY}`
-    );
+    const response = await fetch(url);
+    console.log("[foodFacts] response status:", response.status);
 
     if (!response.ok) return null;
 
     const data = await response.json();
-    let foods = data.foods || [];
+    const foods = data.foods || [];
+    console.log("[foodFacts] results found:", foods.length);
 
-    // Fallback: broader search without raw qualifier
     if (foods.length === 0) {
+      // Fallback without raw qualifier
       const fallback = await fetch(
         `${BASE_URL}/foods/search?query=${encodeURIComponent(ingredientName)}&dataType=Foundation,SR%20Legacy&pageSize=5&api_key=${USDA_API_KEY}`
       );
       if (!fallback.ok) return null;
       const fallbackData = await fallback.json();
-      foods = fallbackData.foods || [];
+      const fallbackFoods = fallbackData.foods || [];
+      console.log("[foodFacts] fallback results:", fallbackFoods.length);
+      if (fallbackFoods.length === 0) return null;
+      return extractNutrients(fallbackFoods[0]);
     }
 
-    if (foods.length === 0) return null;
-
-    // Pick the best match — prefer items whose description closely matches the ingredient name
     const nameLower = ingredientName.toLowerCase();
-    const best = foods.find((f) =>
-      f.description?.toLowerCase().includes(nameLower)
-    ) || foods[0];
+    const best = foods.find((f) => f.description?.toLowerCase().includes(nameLower)) || foods[0];
+    console.log("[foodFacts] best match:", best.description);
 
-    return extractNutrients(best);
-  } catch {
+    const result = extractNutrients(best);
+    console.log("[foodFacts] extracted nutrition:", result);
+    return result;
+  } catch (err) {
+    console.error("[foodFacts] error:", err);
     return null;
   }
 };
@@ -53,17 +60,13 @@ export const fetchIngredientNutrition = async (ingredientName) => {
 const extractNutrients = (food) => {
   const nutrients = food.foodNutrients || [];
 
-  // Use exact nutrient IDs for precision
   const findById = (id) => {
     const match = nutrients.find((n) => n.nutrientId === id);
     return match ? Math.round((match.value || 0) * 10) / 10 : 0;
   };
 
-  // Some USDA responses use nutrientNumber (string) instead of nutrientId
   const findByNumber = (id) => {
-    const match = nutrients.find(
-      (n) => String(n.nutrientNumber) === String(id)
-    );
+    const match = nutrients.find((n) => String(n.nutrientNumber) === String(id));
     return match ? Math.round((match.value || 0) * 10) / 10 : 0;
   };
 

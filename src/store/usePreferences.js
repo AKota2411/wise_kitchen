@@ -1,33 +1,27 @@
 import { useState, useEffect } from "react";
 import { getPreferences, savePreferences } from "../utils/storage";
 
-export const usePreferences = () => {
+export const usePreferences = (uid) => {
   const [preferences, setPreferences] = useState({
-    cuisines: [],
-    restrictions: [],
-    allergies: [],
-    calorieGoal: "",
-    proteinGoal: "",
-    carbGoal: "",
-    fatGoal: "",
+    cuisines: [], restrictions: [], allergies: [],
+    calorieGoal: "", proteinGoal: "", carbGoal: "", fatGoal: "",
   });
 
   useEffect(() => {
-    const saved = getPreferences();
+    if (!uid) return;
+    const saved = getPreferences(uid);
     if (saved) setPreferences((prev) => ({ ...prev, ...saved }));
-  }, []);
+  }, [uid]);
 
   const updatePreferences = (updated) => {
     const merged = { ...preferences, ...updated };
     setPreferences(merged);
-    savePreferences(merged);
+    savePreferences(uid, merged);
   };
 
   const toggleItem = (field, value) => {
     const current = preferences[field];
-    const updated = current.includes(value)
-      ? current.filter((v) => v !== value)
-      : [...current, value];
+    const updated = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
     updatePreferences({ [field]: updated });
   };
 
@@ -41,11 +35,5 @@ export const usePreferences = () => {
     updatePreferences({ [field]: preferences[field].filter((v) => v !== value) });
   };
 
-  return {
-    preferences,
-    updatePreferences,
-    toggleItem,
-    addCustomItem,
-    removeItem,
-  };
+  return { preferences, updatePreferences, toggleItem, addCustomItem, removeItem };
 };

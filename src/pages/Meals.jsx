@@ -3,7 +3,7 @@ import { getMealSuggestion } from "../utils/openai";
 import { getPreferences, getSavedRecipes, saveRecipe } from "../utils/storage";
 import { S, colors } from "../styles";
 
-const Meals = ({ pantry, updateQuantity, toggleLow, addToGroceryList }) => {
+const Meals = ({ uid, pantry, updateQuantity, toggleLow, addToGroceryList }) => {
   const [meal, setMeal] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -16,7 +16,7 @@ const Meals = ({ pantry, updateQuantity, toggleLow, addToGroceryList }) => {
   const [madeItConfirmed, setMadeItConfirmed] = useState(false);
   const [showGroceryPopup, setShowGroceryPopup] = useState(null);
 
-  useEffect(() => { setSavedRecipes(getSavedRecipes()); }, []);
+  useEffect(() => { setSavedRecipes(getSavedRecipes(uid)); }, [uid]);
 
   const fetchMeal = async () => {
     if (pantry.length === 0) { setError("Your pantry is empty. Add some ingredients first."); return; }
@@ -24,7 +24,7 @@ const Meals = ({ pantry, updateQuantity, toggleLow, addToGroceryList }) => {
     setJustSaved(false); setAlreadySaved(false); setShowMadeIt(false);
     setMadeItConfirmed(false); setPantryEdits({});
     try {
-      const result = await getMealSuggestion(pantry, getPreferences(), savedRecipes);
+      const result = await getMealSuggestion(pantry, getPreferences(uid), savedRecipes);
       setMeal(result);
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
@@ -34,8 +34,8 @@ const Meals = ({ pantry, updateQuantity, toggleLow, addToGroceryList }) => {
   const handleSave = () => {
     if (!meal) return;
     if (savedRecipes.find((r) => r.name === meal.name)) { setAlreadySaved(true); return; }
-    saveRecipe({ ...meal, userNotes });
-    setSavedRecipes(getSavedRecipes());
+    saveRecipe(uid, { ...meal, userNotes });
+    setSavedRecipes(getSavedRecipes(uid));
     setJustSaved(true);
   };
 

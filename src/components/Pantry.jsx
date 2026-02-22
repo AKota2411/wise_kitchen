@@ -3,24 +3,22 @@ import { S, colors } from "../styles";
 
 const UNITS = ["pcs", "lbs", "oz", "kg", "g", "cups", "liters", "ml", "tbsp", "tsp"];
 
-const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToGroceryList }) => {
+const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToGroceryList, nutritionLoading }) => {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("pcs");
   const [error, setError] = useState("");
   const [pendingLowItem, setPendingLowItem] = useState(null);
   const [zeroedItem, setZeroedItem] = useState(null);
-  const [adding, setAdding] = useState(false);
+  
 
-  const handleAdd = async () => {
+  const handleAdd = () => {
     if (!name.trim()) { setError("Please enter an item name."); return; }
     if (!quantity || isNaN(quantity) || Number(quantity) <= 0) { setError("Please enter a valid quantity."); return; }
     const duplicate = pantry.find((item) => item.name.toLowerCase() === name.trim().toLowerCase());
     if (duplicate) { setError(`"${name.trim()}" is already in your pantry. Edit the quantity directly.`); return; }
     setError("");
-    setAdding(true);
-    await addItem(name.trim(), Number(quantity), unit);
-    setAdding(false);
+    addItem(name.trim(), Number(quantity), unit);
     setName("");
     setQuantity("");
     setUnit("pcs");
@@ -70,13 +68,13 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
           </select>
           <button
             onClick={handleAdd}
-            disabled={adding}
-            style={adding ? S.btnDisabled : S.btnPrimary}
+            
+            style={S.btnPrimary}
           >
-            {adding ? "Adding..." : "＋ Add"}
+            {"＋ Add"}
           </button>
         </div>
-        {adding && <p style={{ color: colors.primary, fontSize: "0.8rem", marginTop: "0.5rem", marginBottom: 0 }}>🔍 Looking up nutrition data...</p>}
+        {nutritionLoading && <p style={{ color: colors.primary, fontSize: "0.8rem", marginTop: "0.5rem", marginBottom: 0 }}>🔍 Looking up nutrition data...</p>}
         {error && <p style={{ ...S.errorText, marginTop: "0.5rem", marginBottom: 0 }}>{error}</p>}
       </div>
 

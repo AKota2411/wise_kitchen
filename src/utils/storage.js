@@ -1,62 +1,49 @@
-const KEYS = {
-  pantry: "wk_pantry",
-  groceryList: "wk_grocery_list",
-  preferences: "wk_preferences",
-  savedRecipes: "wk_saved_recipes",
-};
+// Keys are scoped per user UID so each account has isolated data
+const keys = (uid) => ({
+  pantry: `wk_pantry_${uid}`,
+  groceryList: `wk_grocery_list_${uid}`,
+  preferences: `wk_preferences_${uid}`,
+  savedRecipes: `wk_saved_recipes_${uid}`,
+});
 
-// Generic helpers
 const get = (key) => {
   try {
     const data = localStorage.getItem(key);
     return data ? JSON.parse(data) : null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 };
 
 const set = (key, value) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (e) {
-    console.error("Storage error:", e);
-  }
+  try { localStorage.setItem(key, JSON.stringify(value)); }
+  catch (e) { console.error("Storage error:", e); }
 };
 
 // Pantry
-export const getPantry = () => get(KEYS.pantry) || [];
-export const savePantry = (items) => set(KEYS.pantry, items);
+export const getPantry = (uid) => get(keys(uid).pantry) || [];
+export const savePantry = (uid, items) => set(keys(uid).pantry, items);
 
 // Grocery List
-export const getGroceryList = () => get(KEYS.groceryList) || [];
-export const saveGroceryList = (items) => set(KEYS.groceryList, items);
+export const getGroceryList = (uid) => get(keys(uid).groceryList) || [];
+export const saveGroceryList = (uid, items) => set(keys(uid).groceryList, items);
 
-// User Preferences
-export const getPreferences = () =>
-  get(KEYS.preferences) || {
-    cuisines: [],
-    restrictions: [],
-    allergies: [],
-    calorieGoal: null,
-    proteinGoal: null,
+// Preferences
+export const getPreferences = (uid) =>
+  get(keys(uid).preferences) || {
+    cuisines: [], restrictions: [], allergies: [],
+    calorieGoal: null, proteinGoal: null, carbGoal: null, fatGoal: null,
   };
-export const savePreferences = (prefs) => set(KEYS.preferences, prefs);
+export const savePreferences = (uid, prefs) => set(keys(uid).preferences, prefs);
 
 // Saved Recipes
-export const getSavedRecipes = () => get(KEYS.savedRecipes) || [];
-export const saveRecipe = (recipe) => {
-  const current = getSavedRecipes();
-  const already = current.find((r) => r.name === recipe.name);
-  if (already) return;
-  set(KEYS.savedRecipes, [...current, { ...recipe, savedAt: new Date().toISOString() }]);
+export const getSavedRecipes = (uid) => get(keys(uid).savedRecipes) || [];
+export const saveRecipe = (uid, recipe) => {
+  const current = getSavedRecipes(uid);
+  if (current.find((r) => r.name === recipe.name)) return;
+  set(keys(uid).savedRecipes, [...current, { ...recipe, savedAt: new Date().toISOString() }]);
 };
-export const deleteRecipe = (name) => {
-  const updated = getSavedRecipes().filter((r) => r.name !== name);
-  set(KEYS.savedRecipes, updated);
+export const deleteRecipe = (uid, name) => {
+  set(keys(uid).savedRecipes, getSavedRecipes(uid).filter((r) => r.name !== name));
 };
-export const updateRecipeNotes = (name, notes) => {
-  const updated = getSavedRecipes().map((r) =>
-    r.name === name ? { ...r, userNotes: notes } : r
-  );
-  set(KEYS.savedRecipes, updated);
+export const updateRecipeNotes = (uid, name, notes) => {
+  set(keys(uid).savedRecipes, getSavedRecipes(uid).map((r) => r.name === name ? { ...r, userNotes: notes } : r));
 };
