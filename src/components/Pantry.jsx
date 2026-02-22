@@ -1,21 +1,13 @@
 import { useState } from "react";
-import { usePantry } from "../store/usePantry";
 
-const UNITS = ["pcs", "lbs", "oz", "kg", "g", "cups", "liters", "ml", "tbsp", "tsp"];
+const UNITS = ["pcs", "lbs", "oz", "kg", "g", "liters", "ml"];
 
-const Pantry = () => {
-  const {
-    pantry,
-    addItem,
-    removeItem,
-    updateQuantity,
-    markAsLow,
-  } = usePantry();
-
+const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToGroceryList }) => {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("pcs");
   const [error, setError] = useState("");
+  const [pendingLowItem, setPendingLowItem] = useState(null);
 
   const handleAdd = () => {
     if (!name.trim()) {
@@ -42,6 +34,29 @@ const Pantry = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") handleAdd();
+  };
+
+  const handleToggleLow = (item) => {
+    if (!item.low) {
+      // Marking as low — show popup
+      setPendingLowItem(item);
+    } else {
+      // Unmarking — just toggle, no popup
+      toggleLow(item.id);
+    }
+  };
+
+  const confirmAddToGrocery = () => {
+    if (!pendingLowItem) return;
+    toggleLow(pendingLowItem.id);
+    addToGroceryList(pendingLowItem.name, pendingLowItem.unit);
+    setPendingLowItem(null);
+  };
+
+  const declineAddToGrocery = () => {
+    if (!pendingLowItem) return;
+    toggleLow(pendingLowItem.id);
+    setPendingLowItem(null);
   };
 
   return (
@@ -136,19 +151,18 @@ const Pantry = () => {
                 <td style={{ padding: "0.5rem" }}>{item.unit}</td>
                 <td style={{ padding: "0.5rem", display: "flex", gap: "0.5rem" }}>
                   <button
-                    onClick={() => markAsLow(item.id)}
-                    disabled={item.low}
+                    onClick={() => handleToggleLow(item)}
                     style={{
                       padding: "0.25rem 0.5rem",
                       borderRadius: "4px",
-                      background: item.low ? "#ccc" : "#f4a261",
+                      background: item.low ? "#aaa" : "#f4a261",
                       color: "white",
                       border: "none",
-                      cursor: item.low ? "default" : "pointer",
+                      cursor: "pointer",
                       fontSize: "0.75rem",
                     }}
                   >
-                    Mark Low
+                    {item.low ? "Unmark Low" : "Mark Low"}
                   </button>
                   <button
                     onClick={() => removeItem(item.id)}
@@ -169,6 +183,63 @@ const Pantry = () => {
             ))}
           </tbody>
         </table>
+      )}
+
+      {/* Popup */}
+      {pendingLowItem && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+        }}>
+          <div style={{
+            background: "white",
+            borderRadius: "12px",
+            padding: "2rem",
+            maxWidth: "360px",
+            width: "90%",
+            textAlign: "center",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+          }}>
+            <h3 style={{ marginBottom: "0.5rem" }}>Add to Grocery List?</h3>
+            <p style={{ color: "#555", marginBottom: "1.5rem" }}>
+              Do you want to add <strong>{pendingLowItem.name}</strong> to your grocery list?
+            </p>
+            <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+              <button
+                onClick={confirmAddToGrocery}
+                style={{
+                  padding: "0.5rem 1.25rem",
+                  borderRadius: "6px",
+                  background: "#2d6a4f",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Yes, Add It
+              </button>
+              <button
+                onClick={declineAddToGrocery}
+                style={{
+                  padding: "0.5rem 1.25rem",
+                  borderRadius: "6px",
+                  background: "#eee",
+                  color: "#333",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                No Thanks
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

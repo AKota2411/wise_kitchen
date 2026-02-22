@@ -58,21 +58,10 @@ export const usePantry = () => {
     savePantry(updated);
   };
 
-  const markAsLow = (id) => {
-    const item = pantry.find((i) => i.id === id);
-    if (!item) return;
-
-    // Auto add to grocery list if not already there
-    const alreadyInList = groceryList.find(
-      (g) => g.name.toLowerCase() === item.name.toLowerCase()
-    );
-
-    if (!alreadyInList) {
-      addToGroceryList(item.name, item.unit);
-    }
-
+  // Toggles low flag — no auto grocery add, that's handled via popup in the component
+  const toggleLow = (id) => {
     const updated = pantry.map((i) =>
-      i.id === id ? { ...i, low: true } : i
+      i.id === id ? { ...i, low: !i.low } : i
     );
     setPantry(updated);
     savePantry(updated);
@@ -125,7 +114,7 @@ export const usePantry = () => {
     addItem,
     removeItem,
     updateQuantity,
-    markAsLow,
+    toggleLow,
     addToGroceryList,
     toggleGroceryItem,
     removeGroceryItem,
