@@ -5,19 +5,18 @@ import {
   getGroceryList,
   saveGroceryList,
 } from "../utils/storage";
+import { fetchIngredientNutrition } from "../utils/foodFacts";
 
 export const usePantry = () => {
   const [pantry, setPantry] = useState([]);
   const [groceryList, setGroceryList] = useState([]);
 
-  // Load from localStorage on mount
   useEffect(() => {
     setPantry(getPantry());
     setGroceryList(getGroceryList());
   }, []);
 
-  // Pantry actions
-  const addItem = (name, quantity, unit) => {
+  const addItem = async (name, quantity, unit) => {
     const existing = pantry.find(
       (item) => item.name.toLowerCase() === name.toLowerCase()
     );
@@ -30,11 +29,15 @@ export const usePantry = () => {
           : item
       );
     } else {
+      // Fetch nutrition data from Open Food Facts
+      const nutrition = await fetchIngredientNutrition(name);
+
       const newItem = {
         id: crypto.randomUUID(),
         name,
         quantity,
         unit,
+        nutrition: nutrition || null,
         addedAt: new Date().toISOString(),
       };
       updated = [...pantry, newItem];
@@ -58,7 +61,6 @@ export const usePantry = () => {
     savePantry(updated);
   };
 
-  // Toggles low flag — no auto grocery add, that's handled via popup in the component
   const toggleLow = (id) => {
     const updated = pantry.map((i) =>
       i.id === id ? { ...i, low: !i.low } : i
@@ -67,7 +69,6 @@ export const usePantry = () => {
     savePantry(updated);
   };
 
-  // Grocery list actions
   const addToGroceryList = (name, unit = "") => {
     const already = groceryList.find(
       (g) => g.name.toLowerCase() === name.toLowerCase()

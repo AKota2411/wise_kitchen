@@ -1,9 +1,16 @@
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 export const getMealSuggestion = async (pantry, preferences, savedRecipes = []) => {
+  // Build pantry list with real nutrition data if available
   const pantryList = pantry
-    .map((item) => `${item.name} (${item.quantity} ${item.unit})`)
-    .join(", ");
+    .map((item) => {
+      let line = `${item.name} (${item.quantity} ${item.unit})`;
+      if (item.nutrition) {
+        line += ` [per 100g: ${item.nutrition.per100g.calories} kcal, ${item.nutrition.per100g.protein}g protein, ${item.nutrition.per100g.carbs}g carbs, ${item.nutrition.per100g.fat}g fat]`;
+      }
+      return line;
+    })
+    .join("\n");
 
   const cuisines = preferences.cuisines.length
     ? preferences.cuisines.join(", ")
@@ -34,9 +41,10 @@ You do not need to use all pantry items, but try to incorporate as many as possi
 The meal should align with the user's cuisine preferences, dietary restrictions, allergies, and nutritional goals.
 Do not suggest meals that violate any restrictions or allergies.
 Include exact measurements for each ingredient.
+Where real nutrition data is provided per ingredient, use it to calculate accurate nutrition totals for the meal.
 ${avoidList}
 
-Pantry ingredients available:
+Pantry ingredients available (with real nutrition data where known):
 ${pantryList || "No ingredients listed"}
 
 User preferences:

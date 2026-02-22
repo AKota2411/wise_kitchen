@@ -9,18 +9,9 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
   const [error, setError] = useState("");
   const [pendingLowItem, setPendingLowItem] = useState(null);
   const [zeroedItem, setZeroedItem] = useState(null);
+  const [adding, setAdding] = useState(false);
 
-  const handleQuantityChange = (item, value) => {
-    const num = Number(value);
-    if (num <= 0) {
-      removeItem(item.id);
-      setZeroedItem(item);
-    } else {
-      updateQuantity(item.id, num);
-    }
-  };
-
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!name.trim()) {
       setError("Please enter an item name.");
       return;
@@ -37,7 +28,9 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
       return;
     }
     setError("");
-    addItem(name.trim(), Number(quantity), unit);
+    setAdding(true);
+    await addItem(name.trim(), Number(quantity), unit);
+    setAdding(false);
     setName("");
     setQuantity("");
     setUnit("pcs");
@@ -49,10 +42,8 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
 
   const handleToggleLow = (item) => {
     if (!item.low) {
-      // Marking as low — show popup
       setPendingLowItem(item);
     } else {
-      // Unmarking — just toggle, no popup
       toggleLow(item.id);
     }
   };
@@ -70,11 +61,20 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
     setPendingLowItem(null);
   };
 
+  const handleQuantityChange = (item, value) => {
+    const num = Number(value);
+    if (num <= 0) {
+      removeItem(item.id);
+      setZeroedItem(item);
+    } else {
+      updateQuantity(item.id, num);
+    }
+  };
+
   return (
     <div style={{ padding: "1.5rem", maxWidth: "700px", margin: "0 auto" }}>
       <h2>My Pantry</h2>
 
-      {/* Add Item Form */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
         <input
           type="text"
@@ -104,23 +104,29 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
         </select>
         <button
           onClick={handleAdd}
+          disabled={adding}
           style={{
             padding: "0.5rem 1rem",
             borderRadius: "6px",
-            background: "#2d6a4f",
+            background: adding ? "#aaa" : "#2d6a4f",
             color: "white",
             border: "none",
-            cursor: "pointer",
+            cursor: adding ? "default" : "pointer",
             fontWeight: "bold",
           }}
         >
-          Add
+          {adding ? "Adding..." : "Add"}
         </button>
       </div>
 
+      {adding && (
+        <p style={{ color: "#2d6a4f", fontSize: "0.85rem", marginBottom: "0.5rem" }}>
+          🔍 Looking up nutrition data...
+        </p>
+      )}
+
       {error && <p style={{ color: "red", marginBottom: "1rem" }}>{error}</p>}
 
-      {/* Pantry List */}
       {pantry.length === 0 ? (
         <p style={{ color: "#888" }}>Your pantry is empty. Start adding ingredients above.</p>
       ) : (
@@ -143,11 +149,17 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
                 }}
               >
                 <td style={{ padding: "0.5rem" }}>
-                  {item.name}
-                  {item.low && (
-                    <span style={{ marginLeft: "0.5rem", color: "#e07b00", fontSize: "0.75rem" }}>
-                      ⚠ Low
-                    </span>
+                  <div>{item.name}
+                    {item.low && (
+                      <span style={{ marginLeft: "0.5rem", color: "#e07b00", fontSize: "0.75rem" }}>
+                        ⚠ Low
+                      </span>
+                    )}
+                  </div>
+                  {item.nutrition && (
+                    <div style={{ fontSize: "0.7rem", color: "#888", marginTop: "0.15rem" }}>
+                      📊 {item.nutrition.per100g.calories} kcal · {item.nutrition.per100g.protein}g protein · {item.nutrition.per100g.carbs}g carbs · {item.nutrition.per100g.fat}g fat <span style={{ color: "#bbb" }}>per 100g</span>
+                    </div>
                   )}
                 </td>
                 <td style={{ padding: "0.5rem" }}>
@@ -202,7 +214,7 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
           <div style={{ background: "white", borderRadius: "12px", padding: "2rem", maxWidth: "360px", width: "90%", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
             <h3 style={{ marginBottom: "0.5rem" }}>Item Removed</h3>
             <p style={{ color: "#555", marginBottom: "1.5rem" }}>
-              <strong>{zeroedItem.name}</strong> hit 0 and was removed. Add it to your grocery list?
+              <strong>{zeroedItem.name}</strong> hit 0 and was removed from your pantry. Add it to your grocery list?
             </p>
             <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
               <button onClick={() => { addToGroceryList(zeroedItem.name, zeroedItem.unit); setZeroedItem(null); }} style={{ padding: "0.5rem 1.25rem", borderRadius: "6px", background: "#2d6a4f", color: "white", border: "none", cursor: "pointer", fontWeight: "bold" }}>Yes, Add It</button>
@@ -212,58 +224,17 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
         </div>
       )}
 
-      {/* Popup */}
+      {/* Mark Low popup */}
       {pendingLowItem && (
-        <div style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0,0,0,0.4)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-        }}>
-          <div style={{
-            background: "white",
-            borderRadius: "12px",
-            padding: "2rem",
-            maxWidth: "360px",
-            width: "90%",
-            textAlign: "center",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-          }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ background: "white", borderRadius: "12px", padding: "2rem", maxWidth: "360px", width: "90%", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
             <h3 style={{ marginBottom: "0.5rem" }}>Add to Grocery List?</h3>
             <p style={{ color: "#555", marginBottom: "1.5rem" }}>
               Do you want to add <strong>{pendingLowItem.name}</strong> to your grocery list?
             </p>
             <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
-              <button
-                onClick={confirmAddToGrocery}
-                style={{
-                  padding: "0.5rem 1.25rem",
-                  borderRadius: "6px",
-                  background: "#2d6a4f",
-                  color: "white",
-                  border: "none",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                }}
-              >
-                Yes, Add It
-              </button>
-              <button
-                onClick={declineAddToGrocery}
-                style={{
-                  padding: "0.5rem 1.25rem",
-                  borderRadius: "6px",
-                  background: "#eee",
-                  color: "#333",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                No Thanks
-              </button>
+              <button onClick={confirmAddToGrocery} style={{ padding: "0.5rem 1.25rem", borderRadius: "6px", background: "#2d6a4f", color: "white", border: "none", cursor: "pointer", fontWeight: "bold" }}>Yes, Add It</button>
+              <button onClick={declineAddToGrocery} style={{ padding: "0.5rem 1.25rem", borderRadius: "6px", background: "#eee", color: "#333", border: "none", cursor: "pointer" }}>No Thanks</button>
             </div>
           </div>
         </div>
