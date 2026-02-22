@@ -26,6 +26,13 @@ const Pantry = () => {
       setError("Please enter a valid quantity.");
       return;
     }
+    const duplicate = pantry.find(
+      (item) => item.name.toLowerCase() === name.trim().toLowerCase()
+    );
+    if (duplicate) {
+      setError(`"${name.trim()}" is already in your inventory. Update the quantity directly in the table.`);
+      return;
+    }
     setError("");
     addItem(name.trim(), Number(quantity), unit);
     setName("");
@@ -45,7 +52,7 @@ const Pantry = () => {
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
         <input
           type="text"
-          placeholder="Item name (e.g. Chicken)"
+          placeholder="Item name (e.g. Broccoli)"
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={handleKeyDown}
