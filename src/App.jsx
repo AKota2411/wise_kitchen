@@ -14,7 +14,7 @@ const App = () => {
     <BrowserRouter>
       <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", background: colors.bgPage, minHeight: "100vh" }}>
         <nav style={S.nav}>
-          <span style={S.navBrand}>🌿 Wise Kitchen</span>
+        <NavLink to="/" style={({ isActive }) => isActive ? S.navLinkActive : S.navLink}>🌿 Wise Kitchen 🌿</NavLink>
           <NavLink to="/" style={({ isActive }) => isActive ? S.navLinkActive : S.navLink}>Pantry</NavLink>
           <NavLink to="/grocery" style={({ isActive }) => isActive ? S.navLinkActive : S.navLink}>Grocery List</NavLink>
           <NavLink to="/meals" style={({ isActive }) => isActive ? S.navLinkActive : S.navLink}>Meals</NavLink>
