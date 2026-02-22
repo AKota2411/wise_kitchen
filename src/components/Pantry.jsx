@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const UNITS = ["pcs", "lbs", "oz", "kg", "g", "liters", "ml"];
+const UNITS = ["pcs", "lbs", "oz", "kg", "g", "cups", "liters", "ml", "tbsp", "tsp"];
 
 const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToGroceryList }) => {
   const [name, setName] = useState("");
@@ -8,6 +8,17 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
   const [unit, setUnit] = useState("pcs");
   const [error, setError] = useState("");
   const [pendingLowItem, setPendingLowItem] = useState(null);
+  const [zeroedItem, setZeroedItem] = useState(null);
+
+  const handleQuantityChange = (item, value) => {
+    const num = Number(value);
+    if (num <= 0) {
+      removeItem(item.id);
+      setZeroedItem(item);
+    } else {
+      updateQuantity(item.id, num);
+    }
+  };
 
   const handleAdd = () => {
     if (!name.trim()) {
@@ -67,7 +78,7 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
         <input
           type="text"
-          placeholder="Item name (e.g. Broccoli)"
+          placeholder="Item name (e.g. Chicken)"
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -144,7 +155,7 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
                     type="number"
                     value={item.quantity}
                     min="0"
-                    onChange={(e) => updateQuantity(item.id, Number(e.target.value))}
+                    onChange={(e) => handleQuantityChange(item, e.target.value)}
                     style={{ width: "60px", padding: "0.25rem", borderRadius: "4px", border: "1px solid #ccc" }}
                   />
                 </td>
@@ -183,6 +194,22 @@ const Pantry = ({ pantry, addItem, removeItem, updateQuantity, toggleLow, addToG
             ))}
           </tbody>
         </table>
+      )}
+
+      {/* Zero quantity popup */}
+      {zeroedItem && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ background: "white", borderRadius: "12px", padding: "2rem", maxWidth: "360px", width: "90%", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
+            <h3 style={{ marginBottom: "0.5rem" }}>Item Removed</h3>
+            <p style={{ color: "#555", marginBottom: "1.5rem" }}>
+              <strong>{zeroedItem.name}</strong> hit 0 and was removed. Add it to your grocery list?
+            </p>
+            <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+              <button onClick={() => { addToGroceryList(zeroedItem.name, zeroedItem.unit); setZeroedItem(null); }} style={{ padding: "0.5rem 1.25rem", borderRadius: "6px", background: "#2d6a4f", color: "white", border: "none", cursor: "pointer", fontWeight: "bold" }}>Yes, Add It</button>
+              <button onClick={() => setZeroedItem(null)} style={{ padding: "0.5rem 1.25rem", borderRadius: "6px", background: "#eee", color: "#333", border: "none", cursor: "pointer" }}>No Thanks</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Popup */}

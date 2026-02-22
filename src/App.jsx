@@ -3,6 +3,7 @@ import Pantry from "./components/Pantry";
 import GroceryList from "./components/GroceryList";
 import Preferences from "./pages/Preferences";
 import Meals from "./pages/Meals";
+import SavedRecipes from "./pages/SavedRecipes";
 import { usePantry } from "./store/usePantry";
 
 const navStyle = ({ isActive }) => ({
@@ -22,13 +23,13 @@ const App = () => {
   return (
     <BrowserRouter>
       <div style={{ fontFamily: "sans-serif" }}>
-        {/* Nav */}
         <nav style={{
           display: "flex",
           gap: "0.75rem",
           padding: "1rem 1.5rem",
           borderBottom: "1px solid #eee",
           alignItems: "center",
+          flexWrap: "wrap",
         }}>
           <span style={{ fontWeight: "bold", fontSize: "1.1rem", marginRight: "1rem", color: "#2d6a4f" }}>
             🌿 Wise Kitchen
@@ -36,14 +37,22 @@ const App = () => {
           <NavLink to="/" style={navStyle}>Pantry</NavLink>
           <NavLink to="/grocery" style={navStyle}>Grocery List</NavLink>
           <NavLink to="/meals" style={navStyle}>Meals</NavLink>
+          <NavLink to="/saved" style={navStyle}>Saved Recipes</NavLink>
           <NavLink to="/preferences" style={navStyle}>Preferences</NavLink>
         </nav>
 
-        {/* Routes */}
         <Routes>
           <Route path="/" element={<Pantry {...pantryState} />} />
           <Route path="/grocery" element={<GroceryList {...pantryState} />} />
-          <Route path="/meals" element={<Meals pantry={pantryState.pantry} />} />
+          <Route path="/meals" element={<Meals pantry={pantryState.pantry} updateQuantity={pantryState.updateQuantity} toggleLow={pantryState.toggleLow} addToGroceryList={pantryState.addToGroceryList} />} />
+          <Route path="/saved" element={
+            <SavedRecipes
+              pantry={pantryState.pantry}
+              updateQuantity={pantryState.updateQuantity}
+              toggleLow={pantryState.toggleLow}
+              addToGroceryList={pantryState.addToGroceryList}
+            />
+          } />
           <Route path="/preferences" element={<Preferences />} />
         </Routes>
       </div>
