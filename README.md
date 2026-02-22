@@ -1,4 +1,4 @@
-# Team Name: Team Data
+Team Data - Ashritha Kota
 
 # Wise Kitchen
 
