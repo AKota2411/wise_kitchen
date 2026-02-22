@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
 import Pantry from "./components/Pantry";
 import GroceryList from "./components/GroceryList";
 import Preferences from "./pages/Preferences";
+import Meals from "./pages/Meals";
 import { usePantry } from "./store/usePantry";
 
 const navStyle = ({ isActive }) => ({
@@ -34,6 +35,7 @@ const App = () => {
           </span>
           <NavLink to="/" style={navStyle}>Pantry</NavLink>
           <NavLink to="/grocery" style={navStyle}>Grocery List</NavLink>
+          <NavLink to="/meals" style={navStyle}>Meals</NavLink>
           <NavLink to="/preferences" style={navStyle}>Preferences</NavLink>
         </nav>
 
@@ -41,6 +43,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Pantry {...pantryState} />} />
           <Route path="/grocery" element={<GroceryList {...pantryState} />} />
+          <Route path="/meals" element={<Meals pantry={pantryState.pantry} />} />
           <Route path="/preferences" element={<Preferences />} />
         </Routes>
       </div>
